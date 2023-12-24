@@ -25,7 +25,7 @@ db.session.commit()
 c1 = Cafe(
     name="Bernie's Cafe",
     description='Serving locals in Noe Valley. A great place to sit and write'
-        ' and write Rithm exercises.',
+    ' and write Rithm exercises.',
     address="3966 24th St",
     city_code='sf',
     url='https://www.yelp.com/biz/bernies-san-francisco',

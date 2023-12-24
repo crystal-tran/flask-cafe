@@ -4,14 +4,12 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField
 from wtforms.validators import InputRequired, Length, URL, Optional
 
-from models import City
-
 
 class CSRFProtection(FlaskForm):
     """CSRFProtection form, intentionally has no fields."""
 
 
-class CafeEditForm(FlaskForm):
+class CafeForm(FlaskForm):
     """Form for adding/editing cafes."""
 
     name = StringField(
@@ -25,7 +23,7 @@ class CafeEditForm(FlaskForm):
     )
 
     url = StringField(
-        '(Optional)Cafe URL',
+        '(Optional) Cafe URL',
         validators=[Optional(), URL()],
     )
 
@@ -35,8 +33,7 @@ class CafeEditForm(FlaskForm):
     )
 
     city_code = SelectField(
-        'City',
-        choices=[(city.id, city.name) for city in City.query.all()],
+        'City'
     )
 
     image_url = StringField(

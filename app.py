@@ -1,13 +1,16 @@
 """Flask App for Flask Cafe."""
 
 import os
+from dotenv import load_dotenv
 
 from flask import Flask, render_template, flash, redirect, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 
-from models import connect_db, Cafe, db
-from forms import CafeEditForm
+from forms import CafeForm
+from helper import get_city_choices
+from models import connect_db, db, Cafe, City
 
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -15,7 +18,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 # app.config['SECRET_KEY'] = os.environ.get("FLASK_SECRET_KEY", "shhhh")
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 app.config['SQLALCHEMY_ECHO'] = True
-# app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
 
 toolbar = DebugToolbarExtension(app)
 
@@ -94,7 +97,10 @@ def cafe_detail(cafe_id):
 def add_cafe():
     """Show form to add cafe and process it."""
 
-    form = CafeEditForm()
+    form = CafeForm()
+    # TODO:can you have a query in helper functions?
+    city_codes = City.query.all()
+    form.city_code.choices = get_city_choices(city_codes)
 
     if form.validate_on_submit():
         data = {k: v for k, v in form.data.items() if k != "csrf_token"}
@@ -104,10 +110,12 @@ def add_cafe():
         db.session.commit()
 
         flash(f'{new_cafe.name} added.')
-        redirect_url = url_for('cafes/<int:cafe_id>', id=new_cafe.id)
+        redirect_url = url_for('cafe_detail', cafe_id=new_cafe.id)
         return redirect(redirect_url)
 
-    render_template('add-form.html', form=form)
+    else:
+        return render_template('cafe/add-form.html', form=form)
+
 
 
 @app.route('/cafes/<int:cafe_id>/edit', methods=['GET', 'POST'])
@@ -115,21 +123,24 @@ def edit_cafe(cafe_id):
     """Show edit form for cafe and process it."""
 
     cafe = Cafe.query.get_or_404(cafe_id)
-    form = CafeEditForm(obj=cafe)
+    form = CafeForm(obj=cafe)
+
+    city_codes = City.query.all()
+    form.city_code.choices = get_city_choices(city_codes)
 
     if form.validate_on_submit():
         data = {k: v for k, v in form.data.items() if k != "csrf_token"}
-        cafe.name = data.name
-        cafe.description = data.description
-        cafe.url = data.url
-        cafe.address = data.address
-        cafe.city_code = data.city_code
-        cafe.image_url = data.image_url
+        cafe.name = data['name']
+        cafe.description = data['description']
+        cafe.url = data['url']
+        cafe.address = data['address']
+        cafe.city_code = data['city_code']
+        cafe.image_url = data['image_url']
 
         db.session.commit()
         flash(f"{cafe.name} edited.")
         return redirect(f"/cafes/{cafe.id}")
-       
-    return render_template("edit-form.html", form=form)
+
+    return render_template("cafe/edit-form.html", cafe=cafe, form=form)
 
 
